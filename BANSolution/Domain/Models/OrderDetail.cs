@@ -15,7 +15,7 @@ namespace Domain.Models
        
         public Product Product { get; set; }
         [ForeignKey("Product")]
-        public int ProductFK { get; set; }
+        public Guid ProductFK { get; set; }
 
         public double Quantity { get; set; }
 
