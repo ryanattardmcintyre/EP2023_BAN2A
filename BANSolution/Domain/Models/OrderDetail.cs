@@ -13,7 +13,7 @@ namespace Domain.Models
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
        
-        public Product Product { get; set; }
+        public virtual Product Product { get; set; }
         [ForeignKey("Product")]
         public Guid ProductFK { get; set; }
 
@@ -23,6 +23,6 @@ namespace Domain.Models
 
         [ForeignKey("Order")]
         public int OrderFK { get; set; } //ForeignKey attribute has to be applied on the actual foreign key property NOT the navigational property
-        public Order Order { get; set; }
+        public virtual Order Order { get; set; }
     }
 }

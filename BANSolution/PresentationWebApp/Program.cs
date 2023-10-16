@@ -1,4 +1,5 @@
 using DataAccess.DataContext;
+using DataAccess.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,9 @@ namespace PresentationWebApp
                 .AddEntityFrameworkStores<ShoppingCartDbContext>();
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddScoped(typeof(ProductsRepository)); //instructing the runtime to inject the ProductsRepository, meaning that
+                                                                    //whenever a instance of ProductsRepository is requested, it will be given
+                                                                    //the same instance
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

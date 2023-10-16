@@ -37,6 +37,12 @@ namespace DataAccess.DataContext
         }
 
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseLazyLoadingProxies();
+        }
+
+
     }
 
 }
