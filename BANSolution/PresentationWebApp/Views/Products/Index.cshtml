@@ -9,6 +9,17 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
+<div>
+    <form method="post" action="\Products\Search">
+        <div class="form-group">
+            <label for="inputSearch">Search:</label>
+            <input type="text" class="form-control" id="inputSearch" placeholder="Enter keyword" name="keyword">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
 <table class="table">
     <thead>
         <tr>
