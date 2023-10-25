@@ -7,9 +7,12 @@ namespace PresentationWebApp.Controllers
 {
     public class ProductsController : Controller
     {
-        private ProductsRepository _productsRepository;
-        public ProductsController(ProductsRepository productsRepository) {
+        public ProductsRepository PR { get; set; }
 
+        private ProductsRepository _productsRepository;
+        private CategoriesRepository _categoriesRepository;
+        public ProductsController(ProductsRepository productsRepository, CategoriesRepository categoriesRepository) {
+            _categoriesRepository = categoriesRepository;
             _productsRepository = productsRepository;
         }
 
@@ -66,9 +69,9 @@ namespace PresentationWebApp.Controllers
         public IActionResult Create() {
             CreateProductViewModel myModel = new CreateProductViewModel();
             //populate the Categories list from the db
-
+            myModel.Categories = _categoriesRepository.GetCategories().ToList();
             
-            return View(); 
+            return View(myModel); 
         
         }
 
@@ -76,7 +79,92 @@ namespace PresentationWebApp.Controllers
 
         //2. runs secondly with the parameters populated with the data....it saves into the db
         [HttpPost]
-        public IActionResult Create(Product p) { }
+        public IActionResult Create(CreateProductViewModel model) {
+
+            //note: (benefit) we are using an existent instance of productsRepository and not creating a new one!
+            try
+            {
+
+                //code which will handle file upload
+                //1. save the phyiscal file
+
+                //2. set the path to be stored in the database
+
+
+                _productsRepository.AddProduct(new Product()
+                {
+                    CategoryFK = model.CategoryFK,
+                    Name = model.Name,
+                    Description = model.Description,
+                    Price = model.Price,
+                    WholesalePrice = model.WholesalePrice,
+                    Stock = model.Stock,
+                    Supplier = model.Supplier
+                });
+
+                TempData["message"] = "Product was saved successfully";
+
+                return RedirectToAction("Index");
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = "Product was not saved successfully";
+                model.Categories = _categoriesRepository.GetCategories().ToList();
+                return View(model);
+            }
+ 
+        }
+
+        public IActionResult Details(Guid id)
+        {
+            var product = _productsRepository.GetProduct(id); //fetched the product from the db
+            if (product == null)
+            {
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                //
+                ListProductsViewModel myProduct = new ListProductsViewModel()
+                {
+                    Category = product.Category.Name,
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Id = product.Id
+                      ,
+                    Stock = product.Stock
+                      ,
+                    Image = product.Image
+                };
+
+                return View(myProduct);
+            }
+        }
+
+        public IActionResult Delete(Guid id)
+        {
+            try
+            {
+                var product= _productsRepository.GetProduct(id);
+                if (product == null) TempData["error"] = "product was not found";
+                else
+                _productsRepository.DeleteProduct(id);
+                
+                TempData["message"] = "Product deleted successfully";
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = "Product was not deleted. Check the input";
+            
+            }
+
+            return RedirectToAction("Index");
+
+            //note: return View("Index") >>> is going to open directly the html page
+            //note: return RedirectToAction("Index") >>> is going to trigger the action
+        }
         
     }
 }

@@ -66,6 +66,14 @@ namespace DataAccess.Repositories
         } 
         public void UpdateProduct(Product product) { }
 
-        public void DeleteProduct(int id) { }
+        public void DeleteProduct(Guid id) {
+            var product = GetProduct(id);
+            if (product != null)
+            {
+                _shoppingCartDbContext.Products.Remove(product);
+                _shoppingCartDbContext.SaveChanges();
+            }
+            else throw new Exception("Product not found");
+        }
     }
 }

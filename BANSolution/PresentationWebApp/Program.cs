@@ -22,9 +22,16 @@ namespace PresentationWebApp
                 .AddEntityFrameworkStores<ShoppingCartDbContext>();
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddScoped(typeof(ProductsRepository)); //instructing the runtime to inject the ProductsRepository, meaning that
-                                                                    //whenever a instance of ProductsRepository is requested, it will be given
-                                                                    //the same instance
+            builder.Services.AddScoped(typeof(ProductsRepository));   //instructing the runtime to inject the ProductsRepository, meaning that
+            builder.Services.AddScoped(typeof(CategoriesRepository)); //whenever a instance of ProductsRepository is requested, it will be given
+                                                                      //the same instance
+
+            //AddScoped => will create AN instance (e.g. of ProductsRepository) one per request
+            //             (in a shopping cart context - this is the most efficient one)
+            //AddTransient => will create a new instance for every call
+            //AddSingleton => will create ONE instance for ALL users!!! 
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

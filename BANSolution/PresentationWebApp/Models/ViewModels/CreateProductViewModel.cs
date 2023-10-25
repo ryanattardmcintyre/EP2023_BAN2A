@@ -1,11 +1,13 @@
 ﻿using Domain.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace PresentationWebApp.Models.ViewModels
 {
     public class CreateProductViewModel
     {
+
         public List<Category> Categories { get; set; } //for display purposes 
 
         [Required]
@@ -23,8 +25,16 @@ namespace PresentationWebApp.Models.ViewModels
         public int CategoryFK { get; set; } //foreign key property: holds the value
 
         public string Supplier { get; set; }
+
+        [DisplayName("Wholesale Price")]
         public double WholesalePrice { get; set; }
 
         public string? Image { get; set; }
+
+        public IFormFile ImageFile { get; set; }
+        
+
+
+
     }
 }
