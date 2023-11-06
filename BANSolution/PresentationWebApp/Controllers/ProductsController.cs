@@ -79,7 +79,7 @@ namespace PresentationWebApp.Controllers
 
         //2. runs secondly with the parameters populated with the data....it saves into the db
         [HttpPost]
-        public IActionResult Create(CreateProductViewModel model) {
+        public IActionResult Create(CreateProductViewModel model, [FromServices] IWebHostEnvironment host) {
 
             //note: (benefit) we are using an existent instance of productsRepository and not creating a new one!
             try
@@ -87,10 +87,37 @@ namespace PresentationWebApp.Controllers
 
                 //code which will handle file upload
                 //1. save the phyiscal file
+                string relativePath = "";
+                if (model.ImageFile != null)
+                {
+                    //1a. generation of a UNIQUE filename for our image
+                    string newFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(model.ImageFile.FileName);
+
+                    //1b. absolute path (where to save the file) e.g. C:\Users\attar\source\repos\EP2023_BAN2A\BANSolution\PresentationWebApp\wwwroot\images\nameOfTheFile.jpg
+                    //IWebHostEnvironment
+                    //esacape characters \" \r \n \t ....
+                    string absolutePath = host.WebRootPath + "\\images\\" + newFilename;
+
+                    //1c. relative path (to save into the db) e.g. \images\nameOfTheFile.jpg
+                    relativePath = "/images/" + newFilename;
+
+                    //1d. save the actual file using the absolute path
+
+                    try
+                    {
+                        using (FileStream fs = new FileStream(absolutePath, FileMode.OpenOrCreate))
+                        {
+                            model.ImageFile.CopyTo(fs);
+                            fs.Flush();
+                        } //closing this bracket will close the filestream. if you don't close the filestream, you might get an error telling you that the File is being used by another process
+                    }
+                    catch (Exception)
+                    {
+                        //log the error
+                    }
+                }
 
                 //2. set the path to be stored in the database
-
-
                 _productsRepository.AddProduct(new Product()
                 {
                     CategoryFK = model.CategoryFK,
@@ -99,10 +126,15 @@ namespace PresentationWebApp.Controllers
                     Price = model.Price,
                     WholesalePrice = model.WholesalePrice,
                     Stock = model.Stock,
-                    Supplier = model.Supplier
+                    Supplier = model.Supplier,
+                    Image = relativePath
                 });
 
-                TempData["message"] = "Product was saved successfully";
+                if (relativePath == "")
+                {
+                    TempData["message"] = "No Image was uploaded but product was saved successfully";
+                }
+                else TempData["message"] = "Product together with image was saved successfully";
 
                 return RedirectToAction("Index");
 
