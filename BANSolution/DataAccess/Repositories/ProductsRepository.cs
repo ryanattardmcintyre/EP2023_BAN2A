@@ -1,4 +1,5 @@
 ﻿using DataAccess.DataContext;
+using Domain.Interfaces;
 using Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace DataAccess.Repositories
      * in each of the repository classes (3), you will make a different call to the same class to create different
      * objects ShoppingCartDbContext()......
      */
-    public class ProductsRepository
+    public class ProductsRepository: IProduct
     {
         private ShoppingCartDbContext _shoppingCartDbContext;
         public ProductsRepository(ShoppingCartDbContext shoppingCartDbContext ) {
@@ -64,7 +65,21 @@ namespace DataAccess.Repositories
             _shoppingCartDbContext.SaveChanges(); //leaving this out won't commit your changes
         
         } 
-        public void UpdateProduct(Product product) { }
+        public void UpdateProduct(Product product) {
+            var originalProduct = GetProduct(product.Id);//assuming that id is never going to change!
+            if (originalProduct != null)
+            {
+                originalProduct.Supplier = product.Supplier;
+                originalProduct.WholesalePrice = product.WholesalePrice;
+                originalProduct.Price = product.Price;
+                originalProduct.Name = product.Name;
+                originalProduct.CategoryFK = product.CategoryFK;
+                originalProduct.Description = product.Description;
+                originalProduct.Stock = product.Stock;
+                originalProduct.Image = product.Image;
+                _shoppingCartDbContext.SaveChanges();
+            }
+        }
 
         public void DeleteProduct(Guid id) {
             var product = GetProduct(id);
