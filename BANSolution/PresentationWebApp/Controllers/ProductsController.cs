@@ -25,6 +25,8 @@ namespace PresentationWebApp.Controllers
         {
             var list = _productsRepository.GetProducts().OrderBy(x=>x.Name).ToList(); //there will be ONE database call
 
+            var fixForCategory = _categoriesRepository.GetCategories().ToList();
+
             //transfer from Product >>>>> ProductViewModel
             var result = from p in list
                          select new ListProductsViewModel()
@@ -35,7 +37,7 @@ namespace PresentationWebApp.Controllers
                              Image = p.Image,
                              Price = p.Price,
                              Stock = p.Stock,
-                             Category = p.Category.Name //using the navigational property
+                             Category = fixForCategory.SingleOrDefault(x=>x.Id == p.CategoryFK).Name // p.Category.Name //using the navigational property
                          };
 
 

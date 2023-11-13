@@ -23,7 +23,11 @@ namespace PresentationWebApp
                 .AddEntityFrameworkStores<ShoppingCartDbContext>();
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddScoped<IProduct, ProductsJsonRepository>();   //instructing the runtime to inject the ProductsRepository, meaning that
+            //absolute path where to store products: C:\Users\attar\source\repos\EP2023_BAN2A\BANSolution\PresentationWebApp\Data\
+
+            var absolutePath = builder.Environment.ContentRootPath + "Data\\products.json";
+
+            builder.Services.AddScoped<IProduct, ProductsJsonRepository>(x=> new ProductsJsonRepository(absolutePath));   //instructing the runtime to inject the ProductsRepository, meaning that
             
             builder.Services.AddScoped(typeof(CategoriesRepository)); //whenever a instance of ProductsRepository is requested, it will be given
                                                                       //the same instance
