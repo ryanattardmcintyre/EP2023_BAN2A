@@ -34,6 +34,8 @@ namespace DataAccess.Repositories
         public void AddProduct(Product product)
         {
             var list = GetProducts().ToList();
+            product.Id = Guid.NewGuid();
+
             list.Add(product);
 
             string myProductsJsonString = JsonSerializer.Serialize(list);

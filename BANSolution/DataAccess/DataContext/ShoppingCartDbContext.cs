@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace DataAccess.DataContext
 {
     //note: this is an abstraction of the database (models the database)
-    public class ShoppingCartDbContext : IdentityDbContext
+    public class ShoppingCartDbContext : IdentityDbContext<CustomUser>
     {
         public ShoppingCartDbContext(DbContextOptions<ShoppingCartDbContext> options)
             : base(options)

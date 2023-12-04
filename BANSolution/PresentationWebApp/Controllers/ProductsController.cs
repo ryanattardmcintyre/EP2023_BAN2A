@@ -1,14 +1,17 @@
 ﻿using DataAccess.Repositories;
 using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using PresentationWebApp.Models.ViewModels;
+using System.Runtime.InteropServices;
 
 namespace PresentationWebApp.Controllers
 {
     public class ProductsController : Controller
     {
-        public ProductsRepository PR { get; set; }
+        
 
         private IProduct _productsRepository;
         private CategoriesRepository _categoriesRepository;
@@ -73,6 +76,7 @@ namespace PresentationWebApp.Controllers
 
         //1. runs first and loads the page with empty fields to the user
         [HttpGet]
+        [Authorize]
         public IActionResult Create() {
             CreateProductViewModel myModel = new CreateProductViewModel();
             //populate the Categories list from the db
@@ -86,64 +90,84 @@ namespace PresentationWebApp.Controllers
 
         //2. runs secondly with the parameters populated with the data....it saves into the db
         [HttpPost]
+        [Authorize] //effect: it doesn't allow the user to access this method if he/she is not logged in
         public IActionResult Create(CreateProductViewModel model, [FromServices] IWebHostEnvironment host) {
 
             //note: (benefit) we are using an existent instance of productsRepository and not creating a new one!
             try
             {
+                ModelState.Remove("Categories");
+                ModelState.Remove("Image");
 
-                //code which will handle file upload
-                //1. save the phyiscal file
-                string relativePath = "";
-                if (model.ImageFile != null)
+
+                if (ModelState.IsValid)
                 {
-                    //1a. generation of a UNIQUE filename for our image
-                    string newFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(model.ImageFile.FileName);
+                    //ModelState.IsValid => that none of the validators signalled any issues with the inputs
 
-                    //1b. absolute path (where to save the file) e.g. C:\Users\attar\source\repos\EP2023_BAN2A\BANSolution\PresentationWebApp\wwwroot\images\nameOfTheFile.jpg
-                    //IWebHostEnvironment
-                    //esacape characters \" \r \n \t ....
-                    string absolutePath = host.WebRootPath + "\\images\\" + newFilename;
-
-                    //1c. relative path (to save into the db) e.g. \images\nameOfTheFile.jpg
-                    relativePath = "/images/" + newFilename;
-
-                    //1d. save the actual file using the absolute path
-
-                    try
+                    //code which will handle file upload
+                    //1. save the phyiscal file
+                    string relativePath = "";
+                    if (model.ImageFile != null)
                     {
-                        using (FileStream fs = new FileStream(absolutePath, FileMode.OpenOrCreate))
+                        //1a. generation of a UNIQUE filename for our image
+                        string newFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(model.ImageFile.FileName);
+
+                        //1b. absolute path (where to save the file) e.g. C:\Users\attar\source\repos\EP2023_BAN2A\BANSolution\PresentationWebApp\wwwroot\images\nameOfTheFile.jpg
+                        //IWebHostEnvironment
+                        //esacape characters \" \r \n \t ....
+                        string absolutePath = host.WebRootPath + "\\images\\" + newFilename;
+
+                        //1c. relative path (to save into the db) e.g. \images\nameOfTheFile.jpg
+                        relativePath = "/images/" + newFilename;
+
+                        //1d. save the actual file using the absolute path
+
+                        try
                         {
-                            model.ImageFile.CopyTo(fs);
-                            fs.Flush();
-                        } //closing this bracket will close the filestream. if you don't close the filestream, you might get an error telling you that the File is being used by another process
+                            using (FileStream fs = new FileStream(absolutePath, FileMode.OpenOrCreate))
+                            {
+                                model.ImageFile.CopyTo(fs);
+                                fs.Flush();
+                            } //closing this bracket will close the filestream. if you don't close the filestream, you might get an error telling you that the File is being used by another process
+                        }
+                        catch (Exception)
+                        {
+                            //log the error
+                        }
                     }
-                    catch (Exception)
+
+
+
+
+                    //2. set the path to be stored in the database
+                    _productsRepository.AddProduct(new Product()
                     {
-                        //log the error
+                        CategoryFK = model.CategoryFK,
+                        Name = model.Name,
+                        Description = model.Description,
+                        Price = model.Price,
+                        WholesalePrice = model.WholesalePrice,
+                        Stock = model.Stock,
+                        Supplier = model.Supplier,
+                        Image = relativePath,
+                        OwnerEmail = User.Identity.Name
+                    });
+
+                    if (relativePath == "")
+                    {
+                        TempData["message"] = "No Image was uploaded but product was saved successfully";
                     }
+                    else TempData["message"] = "Product together with image was saved successfully";
+
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    //if any of the validators flagged an issue with the input its validating
+                    model.Categories = _categoriesRepository.GetCategories().ToList();
+                    return View(model);
                 }
 
-                //2. set the path to be stored in the database
-                _productsRepository.AddProduct(new Product()
-                {
-                    CategoryFK = model.CategoryFK,
-                    Name = model.Name,
-                    Description = model.Description,
-                    Price = model.Price,
-                    WholesalePrice = model.WholesalePrice,
-                    Stock = model.Stock,
-                    Supplier = model.Supplier,
-                    Image = relativePath
-                });
-
-                if (relativePath == "")
-                {
-                    TempData["message"] = "No Image was uploaded but product was saved successfully";
-                }
-                else TempData["message"] = "Product together with image was saved successfully";
-
-                return RedirectToAction("Index");
 
             }
             catch (Exception ex)
@@ -175,7 +199,8 @@ namespace PresentationWebApp.Controllers
                       ,
                     Stock = product.Stock
                       ,
-                    Image = product.Image
+                    Image = product.Image,
+                    OwnerEmail = product.OwnerEmail
                 };
 
                 return View(myProduct);
@@ -186,12 +211,22 @@ namespace PresentationWebApp.Controllers
         {
             try
             {
+
                 var product= _productsRepository.GetProduct(id);
                 if (product == null) TempData["error"] = "product was not found";
                 else
-                _productsRepository.DeleteProduct(id);
+                {
+                    if (product.OwnerEmail == User.Identity.Name)
+                    {
+                        _productsRepository.DeleteProduct(id);
+                        TempData["message"] = "Product deleted successfully";
+                    }
+                    else
+                    {
+                        TempData["error"] = "Access denied";
+                    }
+                }
                 
-                TempData["message"] = "Product deleted successfully";
             }
             catch (Exception ex)
             {
@@ -297,7 +332,8 @@ namespace PresentationWebApp.Controllers
                     Stock = model.Stock,
                     Supplier = model.Supplier,
                     Image = relativePath,
-                    Id = model.Id //<<<<<<<<<< very important in the Update/edit context. it will help the code identify which product to edit
+                    Id = model.Id, //<<<<<<<<<< very important in the Update/edit context. it will help the code identify which product to edit
+                    OwnerEmail = User.Identity.Name
                 });
 
                 if (relativePath == "")

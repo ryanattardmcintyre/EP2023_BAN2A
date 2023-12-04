@@ -1,6 +1,7 @@
 using DataAccess.DataContext;
 using DataAccess.Repositories;
 using Domain.Interfaces;
+using Domain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +20,7 @@ namespace PresentationWebApp
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            builder.Services.AddDefaultIdentity<CustomUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ShoppingCartDbContext>();
             builder.Services.AddControllersWithViews();
 
@@ -27,7 +28,9 @@ namespace PresentationWebApp
 
             var absolutePath = builder.Environment.ContentRootPath + "Data\\products.json";
 
-            builder.Services.AddScoped<IProduct, ProductsJsonRepository>(x=> new ProductsJsonRepository(absolutePath));   //instructing the runtime to inject the ProductsRepository, meaning that
+            //builder.Services.AddScoped<IProduct, ProductsJsonRepository>(x=> new ProductsJsonRepository(absolutePath));   //instructing the runtime to inject the ProductsRepository, meaning that
+
+            builder.Services.AddScoped<IProduct, ProductsRepository>();
             
             builder.Services.AddScoped(typeof(CategoriesRepository)); //whenever a instance of ProductsRepository is requested, it will be given
                                                                       //the same instance

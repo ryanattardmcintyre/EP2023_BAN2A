@@ -8,6 +8,8 @@ namespace PresentationWebApp.Models.ViewModels
     {
         public Guid Id { get; set; }
 
+        public string OwnerEmail { get; set; }
+
         [Required]
         public string Name { get; set; }
         [Required]

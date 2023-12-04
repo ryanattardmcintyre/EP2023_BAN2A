@@ -27,11 +27,16 @@ namespace Domain.Models
          **/
         public Guid Id { get; set; }
 
-        [Required]
+        public string OwnerEmail { get; set; }
+
+
+        [Required(ErrorMessage ="Name cannot be left blank")]
         public string Name { get; set; }
         [Required]
         public string Description { get; set; }
+        
         [Required]
+        [Range(0, int.MaxValue)]
         public double Price { get; set; }
 
         [Required]
