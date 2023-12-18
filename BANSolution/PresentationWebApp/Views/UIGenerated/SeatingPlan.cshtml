@@ -1,0 +1,62 @@
+﻿@model PresentationWebApp.Models.ViewModels.SeatingPlanViewModel
+
+@{
+    ViewData["Title"] = "SeatingPlan";
+}
+
+<h1>SeatingPlan</h1>
+
+<h4>SeatingPlanViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-21">
+        <form asp-action="SeatingPlan">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+
+            <div>
+                Passport: <input type="text" value="" class="form-control" name="Passport" />
+            </div>
+
+
+            <div>
+
+                @for (int row = 1; row <= Model.MaxRows; row++)
+                {
+                    for (int col = 1; col <= Model.MaxCols; col++)
+                    {
+                        var seatId = row + "," + col;
+
+                        if (Model.Seats.SingleOrDefault(x => x.Id == seatId).Booked)
+                        {
+                            <input type="submit" style="width:40px;height:40px;margin-right:1px;background-color:red" value="@seatId" name="SelectedSeat" disabled="disabled" />
+                        }
+                        else
+                        {
+                            <input type="submit" style="width:40px;height:40px;margin-right:1px;" value="@seatId" name="SelectedSeat" />
+                        }
+                    }
+
+                    <br />
+                    @if (row == 3)
+                    {
+                        <br /><br />
+                    }
+                }
+
+
+            </div>
+
+
+         
+         @*   <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>*@
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
